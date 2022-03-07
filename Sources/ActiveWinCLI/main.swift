@@ -1,5 +1,30 @@
 import AppKit
 
+// @discardableResult
+// func runAppleScript(source: String) -> String? {
+// 	NSAppleScript(source: source)?.executeAndReturnError(nil).stringValue
+// }
+
+
+// func toJson<T>(_ data: T) throws -> String {
+// 	let json = try JSONSerialization.data(withJSONObject: data)
+// 	return String(data: json, encoding: .utf8)!
+// }
+
+
+// // Show the system prompt if there's no permission.
+// func hasScreenRecordingPermission() -> Bool {
+// 	CGDisplayStream(
+// 		dispatchQueueDisplay: CGMainDisplayID(),
+// 		outputWidth: 1,
+// 		outputHeight: 1,
+// 		pixelFormat: Int32(kCVPixelFormatType_32BGRA),
+// 		properties: nil,
+// 		queue: DispatchQueue.global(),
+// 		handler: { _, _, _, _ in }
+// 	) != nil
+// }
+
 func getActiveBrowserTabURLAppleScriptCommand(_ appId: String) -> String? {
 	switch appId {
 	case "com.google.Chrome", "com.google.Chrome.beta", "com.google.Chrome.dev", "com.google.Chrome.canary", "com.brave.Browser", "com.brave.Browser.beta", "com.brave.Browser.nightly", "com.microsoft.edgemac", "com.microsoft.edgemac.Beta", "com.microsoft.edgemac.Dev", "com.microsoft.edgemac.Canary", "com.mighty.app", "com.ghostbrowser.gb1", "com.bookry.wavebox", "com.pushplaylabs.sidekick", "com.operasoftware.Opera",  "com.operasoftware.OperaNext", "com.operasoftware.OperaDeveloper", "com.vivaldi.Vivaldi":
@@ -16,10 +41,11 @@ func exitWithoutResult() -> Never {
 	exit(0)
 }
 
-let disableScreenRecordingPermission = CommandLine.arguments.contains("--no-screen-recording-permission")
+// let disableScreenRecordingPermission = CommandLine.arguments.contains("--no-screen-recording-permission")
+let disableScreenRecordingPermission = true
 
 // Show accessibility permission prompt if needed. Required to get the complete window title.
-if !AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary) {
+if !disableScreenRecordingPermission && !AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary) {
 	print("active-win requires the accessibility permission in “System Preferences › Security & Privacy › Privacy › Accessibility”.")
 	exit(1)
 }
@@ -36,6 +62,8 @@ guard
 else {
 	exitWithoutResult()
 }
+
+var exitPut = [Any]()
 
 for window in windows {
 	let windowOwnerPID = window[kCGWindowOwnerPID as String] as! pid_t // Documented to always exist.
@@ -93,12 +121,23 @@ for window in windows {
 		output["url"] = url
 	}
 
-	guard let string = try? toJson(output) else {
-		exitWithoutResult()
-	}
+	// guard let string = try? toJson(output) else {
+	// 	// exitWithoutResult()
+	// 	continue
+	// }
 
-	print(string)
-	exit(0)
+	exitPut.append(output)
+	// print(string)
+	// exit(0)
 }
 
-exitWithoutResult()
+if exitPut.count == 0 {
+	exitWithoutResult()
+}
+
+guard let string = try? toJson(exitPut) else {
+	exitWithoutResult()
+}
+
+print(string)
+
