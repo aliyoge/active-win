@@ -16,8 +16,10 @@
 	"scripts": {
 		"test": "xo && npm run build && ava && tsd",
 		"test-ci": "xo && tsd",
-		"build": "swift build --configuration=release --arch arm64 --arch x86_64 && mv .build/apple/Products/Release/active-win main",
-		"prepare": "npm run build"
+		"prepare": "npm run build",
+		"build": "run-script-os",
+		"build:darwin": "swift build --configuration=release --arch arm64 --arch x86_64 && mv .build/apple/Products/Release/active-win main",
+		"build:win32:linux": "echo 'activate no need to build'"
 	},
 	"files": [
 		"index.js",
@@ -56,6 +58,7 @@
 	],
 	"devDependencies": {
 		"ava": "^2.4.0",
+		"run-script-os": "^1.1.6",
 		"tsd": "^0.14.0",
 		"xo": "^0.38.2"
 	},
